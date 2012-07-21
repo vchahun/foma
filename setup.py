@@ -4,7 +4,6 @@ from distutils.extension import Extension
 ext_modules = [
     Extension(name='foma',
         sources=['python/foma.c'],
-        language='C++', 
         include_dirs=['foma'],
         library_dirs=['foma'],
         libraries=['z', 'foma'], 
@@ -13,6 +12,6 @@ ext_modules = [
 ]
 
 setup(
-    name='kenlm',
+    name='foma',
     ext_modules=ext_modules
 )

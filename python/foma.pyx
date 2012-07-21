@@ -1,3 +1,5 @@
+from libc.stdlib cimport free
+
 cdef class MEDMatch:
     cdef public int cost
     cdef public bytes instring
@@ -10,6 +12,12 @@ cdef class MEDMatch:
 
     def __str__(self):
         return self.outstring
+
+def read_binary(char* filename):
+    return FSM(binary=filename)
+
+def read_text(char* filename):
+    return FSM(text=filename)
 
 cdef class FSM:
     cdef fsm* net
@@ -26,14 +34,6 @@ cdef class FSM:
         if self.net != NULL:
             fsm_destroy(self.net)
 
-    @classmethod
-    def frombinary(type cls, char* filename):
-        return FSM(binary=filename)
-
-    @classmethod
-    def fromtext(type cls, char* filename):
-        return FSM(text=filename)
-
     def write(self, char* filename):
         if fsm_write_binary_file(self.net, filename):
             raise IOError('cannot write FSM to \'%s\'' % filename)
@@ -41,20 +41,24 @@ cdef class FSM:
     def apply_up(self, char* word):
         cdef apply_handle* applyh = apply_init(self.net)
         cdef char* result = apply_up(applyh, word)
-        while True:
-            if result == NULL: break
-            yield result
-            result = apply_up(applyh, NULL)
-        apply_clear(applyh)
+        try:
+            while True:
+                if result == NULL: break
+                yield result
+                result = apply_up(applyh, NULL)
+        finally:
+            apply_clear(applyh)
 
     def apply_down(self, char* word):
         cdef apply_handle* applyh = apply_init(self.net)
         cdef char* result = apply_down(applyh, word)
-        while True:
-            if result == NULL: break
-            yield result
-            result = apply_down(applyh, NULL)
-        apply_clear(applyh)
+        try:
+            while True:
+                if result == NULL: break
+                yield result
+                result = apply_down(applyh, NULL)
+        finally:
+            apply_clear(applyh)
 
     def med(self, char* word, int limit=4, int cutoff=15, int heap_max=4194305, char* align=''):
         if not self.arity == 1:
@@ -67,13 +71,16 @@ cdef class FSM:
         cdef char* result = apply_med(medh, word)
         cdef int cost
         cdef char *instring, *outstring
-        while True:
-            if result == NULL: break
-            cost = apply_med_get_cost(medh)
-            instring = apply_med_get_instring(medh)
-            outstring = apply_med_get_outstring(medh)
-            yield MEDMatch(cost, instring, outstring)
-            result = apply_med(medh, NULL)
+        try:
+            while True:
+                if result == NULL: break
+                cost = apply_med_get_cost(medh)
+                instring = apply_med_get_instring(medh)
+                outstring = apply_med_get_outstring(medh)
+                yield MEDMatch(cost, instring, outstring)
+                result = apply_med(medh, NULL)
+        finally:
+            free(medh)
 
     property arity:
         def __get__(self):

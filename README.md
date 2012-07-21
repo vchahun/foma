@@ -13,7 +13,9 @@ To install the python module, first compile the foma library and then compile th
 
 ## Basic usage
 
-	import foma
-	fsm = foma.FSM('my_fsm.fsm')
-	for result in fsm.apply_up(word):
-		print result
+```python
+import foma
+fsm = foma.read_binary('my_fsm.fsm')
+for result in fsm.apply_up(word):
+    print result
+```
