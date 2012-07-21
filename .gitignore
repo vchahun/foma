@@ -1,0 +1,16 @@
+.svn
+*.o
+*.a
+*.so
+*.dylib
+foma/cgflookup
+foma/flookup
+foma/foma
+foma/libfoma*
+foma/lex.yy.c
+foma/lex.lexc.c
+foma/lex.interface.c
+foma/lex.cmatrix.c
+foma/regex.tab.c
+foma/regex.tab.h
+foma/regex.output
