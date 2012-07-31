@@ -1,14 +1,11 @@
 from libc.stdlib cimport free
 
-cdef char* as_str(word):
-    cdef bytes res
+cdef bytes as_str(word):
     if isinstance(word, bytes):
-        res = word
+        return word
     elif isinstance(word, unicode):
-        res = word.encode('utf8')
-    else:
-        raise TypeError('Expected string and not {0}'.format(type(word)))
-    return res
+        return word.encode('utf8')
+    raise TypeError('Expected string and not {0}'.format(type(word)))
 
 cdef class MEDMatch:
     cdef public int cost
@@ -51,8 +48,9 @@ cdef class FSM:
             raise IOError('cannot write FSM to \'%s\'' % filename)
 
     def apply_up(self, word):
+        word = as_str(word)
         cdef apply_handle* applyh = apply_init(self.net)
-        cdef char* result = apply_up(applyh, as_str(word))
+        cdef char* result = apply_up(applyh, word)
         try:
             while True:
                 if result == NULL: break
@@ -62,8 +60,9 @@ cdef class FSM:
             apply_clear(applyh)
 
     def apply_down(self, word):
+        word = as_str(word)
         cdef apply_handle* applyh = apply_init(self.net)
-        cdef char* result = apply_down(applyh, as_str(word))
+        cdef char* result = apply_down(applyh, word)
         try:
             while True:
                 if result == NULL: break
@@ -81,8 +80,10 @@ cdef class FSM:
         apply_med_set_med_cutoff(medh, cutoff)
         apply_med_set_heap_max(medh, heap_max)
         if align:
-            apply_med_set_align_symbol(medh, as_str(align))
-        cdef char* result = apply_med(medh, as_str(word))
+            align = as_str(align)
+            apply_med_set_align_symbol(medh, align)
+        word = as_str(word)
+        cdef char* result = apply_med(medh, word)
         cdef int cost
         cdef char *instring, *outstring
         try:
